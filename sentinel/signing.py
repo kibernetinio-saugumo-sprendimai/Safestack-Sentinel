@@ -1,4 +1,5 @@
 import base64
+import os
 from pathlib import Path
 from cryptography.hazmat.primitives import serialization
 from cryptography.exceptions import InvalidSignature
@@ -9,6 +10,7 @@ def generate(private_path: str, public_path: str) -> None:
     private = Ed25519PrivateKey.generate()
     public = private.public_key()
     Path(private_path).write_bytes(private.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()))
+    os.chmod(private_path, 0o600)
     Path(public_path).write_bytes(public.public_bytes(serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo))
 
 
