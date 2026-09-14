@@ -1,0 +1,18 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: zip -r safestack-sentinel-${GITHUB_REF_NAME}.zip sentinel profiles docs LICENSE README.md pyproject.toml
+      - run: sha256sum safestack-sentinel-${GITHUB_REF_NAME}.zip > SHA256SUMS
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            safestack-sentinel-${{ github.ref_name }}.zip
+            SHA256SUMS

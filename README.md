@@ -28,6 +28,12 @@ python -m sentinel verify-signature report.json report.sig sentinel-public.pem
 The MVP uses only the Python standard library. See [`docs/USAGE.md`](docs/USAGE.md)
 for all commands and [`docs/SECURITY.md`](docs/SECURITY.md) for the trust model.
 
+Deployment helpers and extensions are documented in
+[`docs/INSTALL.md`](docs/INSTALL.md), [`docs/PLUGINS.md`](docs/PLUGINS.md), and
+[`docs/ALERTS.md`](docs/ALERTS.md). Use `fix --dry-run` for a non-mutating
+remediation plan, `audit --pdf report.pdf` for archival export, and
+`audit --history PATH` to retain score history.
+
 ## What it checks
 
 - host platform and kernel identity;
@@ -50,10 +56,11 @@ Run `python -m sentinel dashboard .` to serve local reports at
 
 ```mermaid
 flowchart LR
-    A[CLI: audit / plan] --> B[Read-only host checks]
+    A[CLI: audit / plan / fix --dry-run] --> B[Read-only host checks]
     B --> C[Findings and score]
     C --> D[JSON report]
     C --> E[HTML report]
+    C --> J[PDF / history / Telegram opt-in]
     D --> F[Ed25519 signature]
     D --> G[Local dashboard]
     H[SHA-256 baseline] --> I[Integrity verification]
