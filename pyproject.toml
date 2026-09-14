@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "safestack-sentinel"
+version = "0.1.0"
+description = "Local, read-only security and privacy auditor"
+requires-python = ">=3.9"
+
+[project.scripts]
+safestack-sentinel = "sentinel.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["sentinel*"]
