@@ -7,6 +7,7 @@ name = "safestack-sentinel"
 version = "0.1.0"
 description = "Local, read-only security and privacy auditor"
 requires-python = ">=3.9"
+dependencies = ["cryptography>=42,<50"]
 
 [project.scripts]
 safestack-sentinel = "sentinel.cli:main"

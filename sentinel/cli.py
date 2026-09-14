@@ -5,6 +5,10 @@ import sys
 from .checks import run_all
 from .integrity import create, verify
 from .report import build, write_html, write_json
+from .report import plan
+from .dashboard import serve
+from .signing import generate as generate_key, sign as sign_report, verify as verify_signature
+from .profiles import load as load_profile
 
 
 def main(argv=None) -> int:
@@ -20,6 +24,23 @@ def main(argv=None) -> int:
     create_p.add_argument("paths", nargs="+")
     verify_p = base_sub.add_parser("verify")
     verify_p.add_argument("baseline")
+    sign_p = sub.add_parser("sign")
+    sign_p.add_argument("report")
+    sign_p.add_argument("signature")
+    sign_p.add_argument("private_key")
+    key_p = sub.add_parser("keygen")
+    key_p.add_argument("private_key")
+    key_p.add_argument("public_key")
+    sig_p = sub.add_parser("verify-signature")
+    sig_p.add_argument("report")
+    sig_p.add_argument("signature")
+    sig_p.add_argument("public_key")
+    plan_p = sub.add_parser("plan", help="Create a non-mutating remediation plan")
+    plan_p.add_argument("--json", default="sentinel-plan.json")
+    plan_p.add_argument("--profile", default="default")
+    dash_p = sub.add_parser("dashboard", help="Serve reports on localhost")
+    dash_p.add_argument("directory", nargs="?", default=".")
+    dash_p.add_argument("--port", type=int, default=8765)
     args = parser.parse_args(argv)
     if args.command == "audit":
         report = build(run_all())
@@ -29,6 +50,24 @@ def main(argv=None) -> int:
             write_html(report, args.html)
         print(json.dumps(report, indent=2) if not args.json else f"Score: {report['score']} (report written to {args.json})")
         return 0
+    if args.command == "plan":
+        load_profile(args.profile)
+        report = build(run_all())
+        from pathlib import Path
+        Path(args.json).write_text(json.dumps(plan(report), indent=2) + "\n", encoding="utf-8")
+        print(f"Read-only plan written to {args.json}")
+        return 0
+    if args.command == "dashboard":
+        serve(args.directory, port=args.port)
+        return 0
+    if args.command == "keygen":
+        generate_key(args.private_key, args.public_key)
+        return 0
+    if args.command == "sign":
+        sign_report(args.report, args.signature, args.private_key)
+        return 0
+    if args.command == "verify-signature":
+        return 0 if verify_signature(args.report, args.signature, args.public_key) else 2
     if args.action == "create":
         create(args.paths, args.output)
         print(f"Baseline written to {args.output}")

@@ -1,0 +1,7 @@
+[Unit]
+Description=SafeStack Sentinel read-only audit
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/safestack-sentinel
+ExecStart=/opt/safestack-sentinel/.venv/bin/python -m sentinel audit --json /var/log/safestack-sentinel.json

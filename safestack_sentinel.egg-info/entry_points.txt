@@ -1,0 +1,2 @@
+[console_scripts]
+safestack-sentinel = sentinel.cli:main

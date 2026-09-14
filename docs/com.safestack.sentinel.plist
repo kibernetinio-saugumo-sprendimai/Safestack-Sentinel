@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plist version="1.0"><dict>
+<key>Label</key><string>com.safestack.sentinel</string>
+<key>ProgramArguments</key><array><string>/usr/bin/python3</string><string>-m</string><string>sentinel</string><string>audit</string><string>--json</string><string>/Users/USERNAME/safestack-sentinel-report.json</string></array>
+<key>WorkingDirectory</key><string>/Users/USERNAME/safestack-sentinel</string>
+<key>StartInterval</key><integer>86400</integer>
+</dict></plist>

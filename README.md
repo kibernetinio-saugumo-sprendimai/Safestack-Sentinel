@@ -19,6 +19,10 @@ Create and verify a file-integrity baseline:
 ```bash
 python -m sentinel baseline create baseline.json /etc/ssh/sshd_config
 python -m sentinel baseline verify baseline.json
+python -m sentinel plan --profile kali-vm --json remediation-plan.json
+python -m sentinel keygen sentinel-private.pem sentinel-public.pem
+python -m sentinel sign report.json report.sig sentinel-private.pem
+python -m sentinel verify-signature report.json report.sig sentinel-public.pem
 ```
 
 The MVP uses only the Python standard library. See [`docs/USAGE.md`](docs/USAGE.md)
@@ -32,10 +36,15 @@ for all commands and [`docs/SECURITY.md`](docs/SECURITY.md) for the trust model.
 - SSH root and password authentication directives;
 - pending APT upgrades on Debian-family systems;
 - SHA-256 baselines for selected files.
+- Ed25519 report signatures and portable host profiles.
+- Read-only remediation plans and a localhost report dashboard.
 
 The report includes a score, severity, status, evidence, and a suggested
 remediation. A `review` or `unknown` result is deliberately not treated as a
 pass.
+
+Run `python -m sentinel dashboard .` to serve local reports at
+`http://127.0.0.1:8765/`.
 
 ## Design principles
 

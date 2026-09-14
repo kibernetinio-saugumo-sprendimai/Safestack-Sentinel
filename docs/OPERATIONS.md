@@ -16,3 +16,8 @@ visibility; root does not improve the correctness of every check.
 
 Retain reports according to your incident-response policy. Reports can contain
 hostnames, paths, service names, and listening ports.
+
+For Linux, copy `docs/safestack-sentinel.service` and `.timer` to
+`/etc/systemd/system/`, then run `systemctl daemon-reload` and
+`systemctl enable --now safestack-sentinel.timer`. For macOS, replace
+`USERNAME` in `docs/com.safestack.sentinel.plist` and load it with `launchctl`.

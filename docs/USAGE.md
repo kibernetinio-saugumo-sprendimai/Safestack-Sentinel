@@ -18,6 +18,28 @@ The command exits zero when the audit completes. A completed audit can still
 contain `fail`, `review`, or `unknown` findings; inspect the report before
 making changes.
 
+Use a profile to document the intended host role:
+
+```bash
+python -m sentinel plan --profile raspberry-pi-vpn --json plan.json
+```
+
+The plan is informational and marked `read_only`; it never executes its
+commands.
+
+## Sign reports
+
+Keep the private key offline where possible:
+
+```bash
+python -m sentinel keygen sentinel-private.pem sentinel-public.pem
+python -m sentinel sign report.json report.sig sentinel-private.pem
+python -m sentinel verify-signature report.json report.sig sentinel-public.pem
+```
+
+The signature file is detached and base64 encoded. Do not commit the private
+key or reports containing sensitive host information.
+
 ## File-integrity baselines
 
 ```bash

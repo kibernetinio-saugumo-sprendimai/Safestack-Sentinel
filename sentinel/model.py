@@ -10,6 +10,7 @@ class Finding:
     summary: str
     evidence: Any = None
     remediation: str = ""
+    command: str = ""
 
     def as_dict(self) -> Dict[str, Any]:
         return asdict(self)

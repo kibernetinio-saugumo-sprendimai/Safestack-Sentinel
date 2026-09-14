@@ -27,3 +27,14 @@ def write_html(report: dict, path: str) -> None:
                                      for k in ("check", "severity", "status", "summary", "remediation")) + "</tr>")
     body = "<table><tr><th>Check</th><th>Severity</th><th>Status</th><th>Summary</th><th>Remediation</th></tr>" + "".join(rows) + "</table>"
     Path(path).write_text(f"<!doctype html><meta charset='utf-8'><title>SafeStack Sentinel</title><h1>Score: {report['score']}</h1>{body}", encoding="utf-8")
+
+
+def plan(report: dict) -> dict:
+    return {
+        "schema": "safestack-sentinel/plan-v1",
+        "read_only": True,
+        "actions": [
+            {"check": f["check"], "severity": f["severity"], "command": f.get("command", ""), "guidance": f["remediation"]}
+            for f in report["findings"] if f["status"] in ("fail", "review", "unknown")
+        ],
+    }

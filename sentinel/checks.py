@@ -86,5 +86,20 @@ def update_check() -> Finding:
                    "Review and apply updates during a maintenance window.")
 
 
+def privacy_check() -> Finding:
+    evidence = {}
+    if platform.system() == "Darwin":
+        evidence["dns"] = run(["scutil", "--dns"], timeout=5)[:2000]
+        evidence["location_note"] = "Review Location Services manually"
+    elif platform.system() == "Linux":
+        try:
+            evidence["dns"] = open("/etc/resolv.conf", encoding="utf-8", errors="replace").read()[:2000]
+        except OSError as exc:
+            evidence["dns"] = str(exc)
+        evidence["telemetry_note"] = "Review installed vendor telemetry services manually"
+    return Finding("privacy", "medium", "review", "Privacy settings require local policy review", evidence,
+                   "Confirm trusted DNS, disable unused telemetry, Bluetooth, and location services.")
+
+
 def run_all() -> List[Finding]:
-    return [platform_check(), firewall_check(), listening_ports(), ssh_check(), update_check()]
+    return [platform_check(), firewall_check(), listening_ports(), ssh_check(), update_check(), privacy_check()]
