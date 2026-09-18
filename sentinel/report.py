@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import List
 
 from .model import Finding, score
+from .safeio import atomic_write
 
 
 def build(findings: List[Finding]) -> dict:
@@ -17,7 +18,7 @@ def build(findings: List[Finding]) -> dict:
 
 
 def write_json(report: dict, path: str) -> None:
-    Path(path).write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    atomic_write(path, (json.dumps(report, indent=2) + "\n").encode(), 0o600)
 
 
 def write_html(report: dict, path: str) -> None:
@@ -26,7 +27,7 @@ def write_html(report: dict, path: str) -> None:
         rows.append("<tr>" + "".join(f"<td>{html.escape(str(item.get(k, '')))}</td>"
                                      for k in ("check", "severity", "status", "summary", "remediation")) + "</tr>")
     body = "<table><tr><th>Check</th><th>Severity</th><th>Status</th><th>Summary</th><th>Remediation</th></tr>" + "".join(rows) + "</table>"
-    Path(path).write_text(f"<!doctype html><meta charset='utf-8'><title>SafeStack Sentinel</title><h1>Score: {report['score']}</h1>{body}", encoding="utf-8")
+    atomic_write(path, f"<!doctype html><meta charset='utf-8'><title>SafeStack Sentinel</title><h1>Score: {report['score']}</h1>{body}".encode(), 0o600)
 
 
 def plan(report: dict) -> dict:

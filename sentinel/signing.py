@@ -4,19 +4,19 @@ from pathlib import Path
 from cryptography.hazmat.primitives import serialization
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from .safeio import atomic_write
 
 
 def generate(private_path: str, public_path: str) -> None:
     private = Ed25519PrivateKey.generate()
     public = private.public_key()
-    Path(private_path).write_bytes(private.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()))
-    os.chmod(private_path, 0o600)
-    Path(public_path).write_bytes(public.public_bytes(serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo))
+    atomic_write(private_path, private.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()), 0o600)
+    atomic_write(public_path, public.public_bytes(serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo), 0o644)
 
 
 def sign(input_path: str, signature_path: str, private_path: str) -> None:
     private = serialization.load_pem_private_key(Path(private_path).read_bytes(), password=None)
-    Path(signature_path).write_text(base64.b64encode(private.sign(Path(input_path).read_bytes())).decode() + "\n", encoding="utf-8")
+    atomic_write(signature_path, (base64.b64encode(private.sign(Path(input_path).read_bytes())).decode() + "\n").encode(), 0o600)
 
 
 def verify(input_path: str, signature_path: str, public_path: str) -> bool:

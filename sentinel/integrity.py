@@ -1,6 +1,7 @@
 import hashlib
 import json
 from pathlib import Path
+from .safeio import atomic_write
 
 
 def digest(path: str) -> str:
@@ -13,7 +14,7 @@ def digest(path: str) -> str:
 
 def create(paths, output: str) -> None:
     data = {str(Path(p)): digest(p) for p in paths}
-    Path(output).write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+    atomic_write(output, (json.dumps(data, indent=2) + "\n").encode(), 0o600)
 
 
 def verify(baseline: str):

@@ -13,6 +13,7 @@ from .plugins import discover
 from .history import append as append_history, load as load_history
 from .notify import telegram
 from .pdf import write_pdf
+from .safeio import atomic_write
 
 
 def main(argv=None) -> int:
@@ -73,8 +74,7 @@ def main(argv=None) -> int:
     if args.command == "plan":
         load_profile(args.profile)
         report = build(run_all())
-        from pathlib import Path
-        Path(args.json).write_text(json.dumps(plan(report), indent=2) + "\n", encoding="utf-8")
+        atomic_write(args.json, (json.dumps(plan(report), indent=2) + "\n").encode("utf-8"))
         print(f"Read-only plan written to {args.json}")
         return 0
     if args.command == "fix":
@@ -82,8 +82,7 @@ def main(argv=None) -> int:
             print("Only --dry-run is supported; no system changes were made.", file=sys.stderr)
             return 2
         report = build(run_all())
-        from pathlib import Path
-        Path(args.json).write_text(json.dumps(plan(report), indent=2) + "\n", encoding="utf-8")
+        atomic_write(args.json, (json.dumps(plan(report), indent=2) + "\n").encode("utf-8"))
         print(f"Dry-run fix plan written to {args.json}")
         return 0
     if args.command == "history":

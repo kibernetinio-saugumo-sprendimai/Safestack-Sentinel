@@ -10,18 +10,25 @@ def discover(directory: str = "plugins") -> List[Finding]:
     if not root.is_dir():
         return findings
     for path in sorted(root.glob("*.py")):
-        if path.name.startswith("_"):
+        if path.name.startswith("_") or path.is_symlink():
             continue
         spec = importlib.util.spec_from_file_location("sentinel_plugin_" + path.stem, path)
         if not spec or not spec.loader:
             continue
         module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
+        try:
+            spec.loader.exec_module(module)
+        except Exception:
+            continue
         run = getattr(module, "run", None)
         if not callable(run):
             continue
-        result = run()
+        try:
+            result = run()
+        except Exception:
+            continue
         if isinstance(result, Finding):
             result = [result]
-        findings.extend(result or [])
+        if isinstance(result, list) and all(isinstance(item, Finding) for item in result):
+            findings.extend(result)
     return findings
