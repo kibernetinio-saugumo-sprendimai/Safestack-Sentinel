@@ -8,3 +8,12 @@ __pycache__/
 
 .idea/
 .DS_Store
+
+# Local credentials and sensitive audit artifacts
+.env
+.env.*
+*.pem
+*.key
+*.sig
+*.pdf
+*.jsonl

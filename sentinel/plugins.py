@@ -8,7 +8,7 @@ def discover(directory: str = "plugins") -> List[Finding]:
     findings = []
     root = Path(directory).expanduser()
     if root.is_symlink() or not root.is_dir():
-        return findings
+        return [Finding("plugins", "medium", "unknown", "Plugin directory is missing or is a symlink")]
     root = root.resolve()
     for path in sorted(root.glob("*.py")):
         if path.name.startswith("_") or path.is_symlink() or not path.is_file():
@@ -23,17 +23,24 @@ def discover(directory: str = "plugins") -> List[Finding]:
         module = importlib.util.module_from_spec(spec)
         try:
             spec.loader.exec_module(module)
-        except Exception:
+        except Exception as exc:
+            findings.append(Finding("plugin:" + path.stem, "medium", "unknown",
+                                    "Plugin check could not complete", type(exc).__name__))
             continue
         run = getattr(module, "run", None)
         if not callable(run):
+            findings.append(Finding("plugin:" + path.stem, "medium", "unknown", "Plugin has no callable run"))
             continue
         try:
             result = run()
-        except Exception:
+        except Exception as exc:
+            findings.append(Finding("plugin:" + path.stem, "medium", "unknown",
+                                    "Plugin check could not complete", type(exc).__name__))
             continue
         if isinstance(result, Finding):
             result = [result]
         if isinstance(result, list) and all(isinstance(item, Finding) for item in result):
             findings.extend(result)
+        else:
+            findings.append(Finding("plugin:" + path.stem, "medium", "unknown", "Invalid plugin result"))
     return findings

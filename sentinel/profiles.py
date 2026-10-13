@@ -1,11 +1,16 @@
-import json
-from pathlib import Path
+"""Built-in host labels, available in source checkouts and installed packages."""
+from copy import deepcopy
 
-ROOT = Path(__file__).resolve().parents[1]
+PROFILES = {
+    "default": {"name": "default", "role": "general-purpose host"},
+    "kali-vm": {"name": "kali-vm", "role": "Kali Linux virtual machine"},
+    "ubuntu-server": {"name": "ubuntu-server", "role": "Ubuntu server"},
+    "raspberry-pi-vpn": {"name": "raspberry-pi-vpn", "role": "Raspberry Pi VPN host"},
+    "macos": {"name": "macos", "role": "macOS workstation"},
+}
 
 
 def load(name: str) -> dict:
-    path = ROOT / "profiles" / f"{name}.json"
-    if not path.is_file():
+    if name not in PROFILES:
         raise ValueError(f"Unknown profile: {name}")
-    return json.loads(path.read_text(encoding="utf-8"))
+    return deepcopy(PROFILES[name])
