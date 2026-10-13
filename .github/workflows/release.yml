@@ -8,10 +8,12 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - run: zip -r safestack-sentinel-${GITHUB_REF_NAME}.zip sentinel profiles docs LICENSE README.md pyproject.toml
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - run: zip -r safestack-sentinel-${GITHUB_REF_NAME}.zip sentinel docs LICENSE README.md pyproject.toml
       - run: sha256sum safestack-sentinel-${GITHUB_REF_NAME}.zip > SHA256SUMS
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
         with:
           files: |
             safestack-sentinel-${{ github.ref_name }}.zip

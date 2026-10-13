@@ -1,3 +1,6 @@
+> Historical snapshot dated 2026-09-24. This PASS statement is not a certification
+> of the current commit. See docs/CHANGELOG.md and current CI results.
+
 # SafeStack Sentinel Verification & Audit Report
 
 - **Project:** `Safestack-Sentinel`

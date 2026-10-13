@@ -32,3 +32,16 @@ firewall rule.
 Do not publish an unpatched vulnerability with host reports or credentials.
 Open a private report with reproduction steps, affected commit, impact, and a
 minimal remediation proposal.
+
+## Observation coverage
+
+Inspection failures and missing commands are unknown, never fabricated passes.
+SSH uses sshd -T to read effective global defaults. Hardened global defaults
+remain review because connection-specific Match rules require sshd -T -C checks
+for relevant users and addresses. This does not test a running SSH daemon.
+On macOS listener inspection covers TCP only and is limited by user visibility.
+APT checks use the existing local index and do not refresh it.
+Failed or invalid opt-in plugins produce unknown findings. Reports include
+assessment and status_counts; a score of 100 with unknown/review findings is not a clean bill
+of health. Telegram is an explicit network-enabled exception to local operation,
+uses a fixed HTTPS host and does not follow redirects.

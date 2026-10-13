@@ -57,3 +57,11 @@ file was trustworthy.
 - `0`: command completed successfully;
 - `2`: baseline verification found a mismatch;
 - other non-zero codes: invalid arguments or an operational error.
+
+## Built-in profile labels
+
+Available profiles are default, kali-vm, ubuntu-server, raspberry-pi-vpn and
+macos. A plan records the selected profile as metadata; it does not change
+checks or configure a VPN. Profiles are bundled in Python, not external files.
+Inspect status_counts as well as score. Secure SSH global defaults still need
+Match-rule review. Keep private keys outside the dashboard report directory.

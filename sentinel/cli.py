@@ -69,12 +69,12 @@ def main(argv=None) -> int:
             append_history(report, args.history)
         if args.telegram:
             print("Telegram notification sent" if telegram(report) else "Telegram notification skipped (credentials missing)")
-        print(json.dumps(report, indent=2) if not args.json else f"Score: {report['score']} (report written to {args.json})")
+        print(json.dumps(report, indent=2) if not args.json else f"Assessment: {report['assessment']}; score: {report['score']} (report written to {args.json})")
         return 0
     if args.command == "plan":
-        load_profile(args.profile)
+        profile = load_profile(args.profile)
         report = build(run_all())
-        atomic_write(args.json, (json.dumps(plan(report), indent=2) + "\n").encode("utf-8"))
+        atomic_write(args.json, (json.dumps(plan(report, profile), indent=2) + "\n").encode("utf-8"))
         print(f"Read-only plan written to {args.json}")
         return 0
     if args.command == "fix":

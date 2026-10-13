@@ -1,13 +1,33 @@
 name: Sentinel CI
 on: [push, pull_request]
+permissions:
+  contents: read
 jobs:
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ["3.9", "3.12"]
+    runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          python-version: '3.12'
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -e .
       - run: python -m unittest discover -v
       - run: python -m compileall -q sentinel tests
-      - run: python -m sentinel audit --json /tmp/sentinel-ci.json
+      - run: python -m sentinel audit --json "${RUNNER_TEMP}/sentinel-ci.json"
+      - run: python -m sentinel plan --profile raspberry-pi-vpn --json "${RUNNER_TEMP}/sentinel-plan.json"
+      - name: Verify tracked checksums
+        run: shasum -a 256 -c SHA256SUMS
+  ci-success:
+    name: Sentinel CI passed
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: test "${{ needs.test.result }}" = "success"

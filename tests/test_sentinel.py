@@ -81,10 +81,10 @@ class SentinelTests(unittest.TestCase):
             self.assertFalse(verify_signature(str(report), str(signature), str(public)))
 
     def test_run_uses_sanitized_path(self):
-        completed = Mock(stdout="ok", stderr="")
+        completed = Mock(stdout="ok", stderr="", returncode=0)
         with patch("sentinel.checks.subprocess.run", return_value=completed) as proc:
             self.assertEqual(run(["/usr/bin/true"]), "ok")
-        self.assertEqual(proc.call_args.kwargs["env"], {"PATH": "/usr/sbin:/usr/bin:/sbin:/bin"})
+        self.assertEqual(proc.call_args.kwargs["env"], {"PATH": "/usr/sbin:/usr/bin:/sbin:/bin", "LC_ALL": "C"})
 
     def test_atomic_write_rejects_symlink_parent(self):
         with tempfile.TemporaryDirectory() as tmp:
