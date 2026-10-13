@@ -5,3 +5,6 @@ __pycache__/
 *.html
 
 *.egg-info/
+
+.idea/
+.DS_Store
