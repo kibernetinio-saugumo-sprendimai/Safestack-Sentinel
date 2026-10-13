@@ -1,17 +1,41 @@
 import os
 import platform
 import re
-import shutil
-import socket
+import stat
 import subprocess
+from pathlib import Path
 from typing import List, Optional
 
 from .model import Finding
 
 
+TRUSTED_COMMANDS = {
+    "apt-get": ("/usr/bin/apt-get",),
+    "lsof": ("/usr/sbin/lsof", "/usr/bin/lsof"),
+    "scutil": ("/usr/sbin/scutil", "/usr/bin/scutil"),
+    "ss": ("/usr/bin/ss", "/bin/ss"),
+    "ufw": ("/usr/sbin/ufw", "/usr/bin/ufw"),
+}
+
+
+def trusted_command(name: str) -> Optional[str]:
+    for candidate in TRUSTED_COMMANDS.get(name, ()):
+        path = Path(candidate)
+        try:
+            info = path.stat()
+        except OSError:
+            continue
+        if not stat.S_ISREG(info.st_mode) or not os.access(path, os.X_OK):
+            continue
+        if info.st_mode & (stat.S_IWGRP | stat.S_IWOTH):
+            continue
+        return str(path)
+    return None
+
+
 def run(cmd: List[str], timeout: float = 5.0) -> str:
     try:
-        p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, env={"PATH": "/usr/sbin:/usr/bin:/sbin:/bin"})
         return (p.stdout + p.stderr).strip()
     except (FileNotFoundError, subprocess.TimeoutExpired, OSError) as exc:
         return f"unavailable: {exc}"
@@ -30,8 +54,9 @@ def firewall_check() -> Finding:
                        "macOS application firewall is enabled" if ok else "macOS application firewall is not confirmed enabled",
                        out, "Enable the macOS application firewall in System Settings > Network > Firewall.")
     if system == "Linux":
-        if shutil.which("ufw"):
-            out = run(["ufw", "status", "verbose"])
+        ufw = trusted_command("ufw")
+        if ufw:
+            out = run([ufw, "status", "verbose"])
             ok = "status: active" in out.lower()
             return Finding("firewall", "high", "pass" if ok else "fail",
                            "UFW is active" if ok else "UFW is not active", out,
@@ -43,9 +68,11 @@ def firewall_check() -> Finding:
 
 def listening_ports() -> Finding:
     if platform.system() == "Linux":
-        out = run(["ss", "-lntup"])
+        ss = trusted_command("ss")
+        out = run([ss, "-lntup"]) if ss else "trusted ss executable not found"
     elif platform.system() == "Darwin":
-        out = run(["lsof", "-nP", "-iTCP", "-sTCP:LISTEN"])
+        lsof = trusted_command("lsof")
+        out = run([lsof, "-nP", "-iTCP", "-sTCP:LISTEN"]) if lsof else "trusted lsof executable not found"
     else:
         out = "unsupported platform"
     lines = [line for line in out.splitlines() if line.strip()]
@@ -74,9 +101,10 @@ def ssh_check() -> Finding:
 
 
 def update_check() -> Finding:
-    if platform.system() != "Linux" or not shutil.which("apt-get"):
+    apt_get = trusted_command("apt-get")
+    if platform.system() != "Linux" or not apt_get:
         return Finding("updates", "low", "unknown", "Automatic package update check is OS-specific")
-    out = run(["apt-get", "-s", "upgrade"], timeout=15)
+    out = run([apt_get, "-s", "upgrade"], timeout=15)
     match = re.search(r"^(\d+) upgraded", out, re.M)
     count = int(match.group(1)) if match else None
     if count is None:
@@ -89,7 +117,8 @@ def update_check() -> Finding:
 def privacy_check() -> Finding:
     evidence = {}
     if platform.system() == "Darwin":
-        evidence["dns"] = run(["scutil", "--dns"], timeout=5)[:2000]
+        scutil = trusted_command("scutil")
+        evidence["dns"] = (run([scutil, "--dns"], timeout=5) if scutil else "trusted scutil executable not found")[:2000]
         evidence["location_note"] = "Review Location Services manually"
     elif platform.system() == "Linux":
         try:

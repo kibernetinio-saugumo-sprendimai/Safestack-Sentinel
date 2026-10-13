@@ -6,11 +6,16 @@ from .model import Finding
 
 def discover(directory: str = "plugins") -> List[Finding]:
     findings = []
-    root = Path(directory)
-    if not root.is_dir():
+    root = Path(directory).expanduser()
+    if root.is_symlink() or not root.is_dir():
         return findings
+    root = root.resolve()
     for path in sorted(root.glob("*.py")):
-        if path.name.startswith("_") or path.is_symlink():
+        if path.name.startswith("_") or path.is_symlink() or not path.is_file():
+            continue
+        try:
+            path.resolve(strict=True).relative_to(root)
+        except ValueError:
             continue
         spec = importlib.util.spec_from_file_location("sentinel_plugin_" + path.stem, path)
         if not spec or not spec.loader:
