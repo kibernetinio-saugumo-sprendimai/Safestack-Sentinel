@@ -104,7 +104,11 @@ def main(argv=None) -> int:
         create(args.paths, args.output)
         print(f"Baseline written to {args.output}")
         return 0
-    results = verify(args.baseline)
+    try:
+        results = verify(args.baseline)
+    except (OSError, ValueError) as exc:
+        print(f"Baseline verification failed: {exc}", file=sys.stderr)
+        return 2
     for path, ok in results:
         print(("OK   " if ok else "FAIL ") + path)
     return 0 if all(ok for _, ok in results) else 2

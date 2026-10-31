@@ -52,10 +52,17 @@ read-only location if it is used for incident response. A baseline proves only
 that the bytes match the recorded digest; it does not prove that the original
 file was trustworthy.
 
+Relative paths are resolved from the current working directory; verify from
+the same directory used during creation. Baselines must contain at least one
+entry, unique paths and lowercase SHA-256 digests. Missing or unreadable files
+are reported as `FAIL`, and verification continues for the remaining files.
+Malformed baselines and unsafe targets cause verification to fail with a
+diagnostic and exit code `2`.
+
 ## Exit codes
 
 - `0`: command completed successfully;
-- `2`: baseline verification found a mismatch;
+- `2`: baseline verification failed, or signature verification failed;
 - other non-zero codes: invalid arguments or an operational error.
 
 ## Built-in profile labels
