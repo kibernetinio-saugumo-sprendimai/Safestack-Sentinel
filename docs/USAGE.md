@@ -40,6 +40,11 @@ python -m sentinel verify-signature report.json report.sig sentinel-public.pem
 The signature file is detached and base64 encoded. Do not commit the private
 key or reports containing sensitive host information.
 
+Key generation requires two different, unused output paths. Existing files
+and symlinks are never overwritten; choose new filenames for key rotation.
+If writing the public key fails after the private key was saved, retain that
+private key and inspect the error before retrying with new output paths.
+
 ## File-integrity baselines
 
 ```bash
@@ -58,6 +63,8 @@ entry, unique paths and lowercase SHA-256 digests. Missing or unreadable files
 are reported as `FAIL`, and verification continues for the remaining files.
 Malformed baselines and unsafe targets cause verification to fail with a
 diagnostic and exit code `2`.
+The baseline output must differ from every tracked file, including symbolic
+and hard-link aliases. A rejected creation leaves the tracked files intact.
 
 ## Exit codes
 

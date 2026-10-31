@@ -8,10 +8,17 @@ from .safeio import atomic_write
 
 
 def generate(private_path: str, public_path: str) -> None:
+    private_target = Path(private_path).expanduser()
+    public_target = Path(public_path).expanduser()
+    if private_target.resolve() == public_target.resolve():
+        raise ValueError("private and public key paths must be different")
+    for target in (private_target, public_target):
+        if target.exists() or target.is_symlink():
+            raise FileExistsError(f"refusing to overwrite existing key path: {target}")
     private = Ed25519PrivateKey.generate()
     public = private.public_key()
-    atomic_write(private_path, private.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()), 0o600)
-    atomic_write(public_path, public.public_bytes(serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo), 0o644)
+    atomic_write(private_path, private.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()), 0o600, overwrite=False)
+    atomic_write(public_path, public.public_bytes(serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo), 0o644, overwrite=False)
 
 
 def sign(input_path: str, signature_path: str, private_path: str) -> None:

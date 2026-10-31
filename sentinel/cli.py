@@ -93,7 +93,11 @@ def main(argv=None) -> int:
         serve(args.directory, port=args.port)
         return 0
     if args.command == "keygen":
-        generate_key(args.private_key, args.public_key)
+        try:
+            generate_key(args.private_key, args.public_key)
+        except (OSError, ValueError) as exc:
+            print(f"Key generation failed: {exc}", file=sys.stderr)
+            return 2
         return 0
     if args.command == "sign":
         sign_report(args.report, args.signature, args.private_key)
@@ -101,7 +105,11 @@ def main(argv=None) -> int:
     if args.command == "verify-signature":
         return 0 if verify_signature(args.report, args.signature, args.public_key) else 2
     if args.action == "create":
-        create(args.paths, args.output)
+        try:
+            create(args.paths, args.output)
+        except (OSError, ValueError) as exc:
+            print(f"Baseline creation failed: {exc}", file=sys.stderr)
+            return 2
         print(f"Baseline written to {args.output}")
         return 0
     try:
