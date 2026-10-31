@@ -31,6 +31,12 @@ def digest(path: str, max_bytes: int = MAX_DIGEST_BYTES) -> str:
 
 
 def create(paths, output: str) -> None:
+    paths = list(paths)
+    destination = Path(output).expanduser().resolve()
+    for path in paths:
+        source = Path(path)
+        if source.resolve() == destination or (destination.exists() and source.samefile(destination)):
+            raise ValueError("baseline output must not be one of the tracked files")
     data = {str(Path(p)): digest(p) for p in paths}
     _validate(data)
     atomic_write(output, (json.dumps(data, indent=2) + "\n").encode(), 0o600)

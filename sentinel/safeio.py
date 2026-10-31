@@ -37,7 +37,7 @@ def _reject_unsafe_symlink_components(path: Path) -> None:
         if stat.S_ISLNK(info.st_mode) and info.st_uid != 0:
             raise ValueError("artifact path must not contain user-owned symlinks")
 
-def atomic_write(path: str, data: bytes, mode: int = 0o600) -> None:
+def atomic_write(path: str, data: bytes, mode: int = 0o600, *, overwrite: bool = True) -> None:
     target = _absolute(path)
     parent = _parent(path)
     fd, temporary = tempfile.mkstemp(prefix=f".{target.name}.", dir=parent)
@@ -47,7 +47,13 @@ def atomic_write(path: str, data: bytes, mode: int = 0o600) -> None:
             stream.write(data)
             stream.flush()
             os.fsync(stream.fileno())
-        os.replace(temporary, parent / target.name)
+        if overwrite:
+            os.replace(temporary, parent / target.name)
+        else:
+            # Linking publishes the complete file and atomically refuses an
+            # existing destination, including one created after preflight.
+            os.link(temporary, parent / target.name)
+            os.unlink(temporary)
     except Exception:
         try: os.unlink(temporary)
         except OSError: pass
