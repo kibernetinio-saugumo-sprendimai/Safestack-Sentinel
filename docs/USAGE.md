@@ -40,6 +40,11 @@ python -m sentinel verify-signature report.json report.sig sentinel-public.pem
 The signature file is detached and base64 encoded. Do not commit the private
 key or reports containing sensitive host information.
 
+Key generation requires two different, unused output paths. Existing files
+and symlinks are never overwritten; choose new filenames for key rotation.
+If writing the public key fails after the private key was saved, retain that
+private key and inspect the error before retrying with new output paths.
+
 ## File-integrity baselines
 
 ```bash
@@ -52,14 +57,29 @@ read-only location if it is used for incident response. A baseline proves only
 that the bytes match the recorded digest; it does not prove that the original
 file was trustworthy.
 
+Relative paths are resolved from the current working directory; verify from
+the same directory used during creation. Baselines must contain at least one
+entry, unique paths and lowercase SHA-256 digests. Missing or unreadable files
+are reported as `FAIL`, and verification continues for the remaining files.
+Malformed baselines and unsafe targets cause verification to fail with a
+diagnostic and exit code `2`.
+The baseline output must differ from every tracked file, including symbolic
+and hard-link aliases. A rejected creation leaves the tracked files intact.
+
 ## Exit codes
 
 - `0`: command completed successfully;
-- `2`: baseline verification found a mismatch;
+- `2`: baseline verification failed, or signature verification failed;
 - other non-zero codes: invalid arguments or an operational error.
 
-Profiles select the checks used by `plan --profile NAME`; built-in profiles ship
-inside the Python package. SSH inspection uses `sshd -T`. Secure default values
-remain `review` until connection-specific `Match` rules have been checked with
-`sshd -T -C` for the relevant users and connections. Missing tools, permission
-errors, and unrecognized socket output produce `unknown`.
+## Built-in profile labels
+
+Available profiles are default, kali-vm, ubuntu-server, raspberry-pi-vpn and
+macos. A plan records the selected profile as metadata; it does not change
+checks or configure a VPN. Profiles are bundled in Python, not external files.
+Inspect status_counts as well as score. Secure SSH global defaults still need
+Match-rule review. Keep private keys outside the dashboard report directory.
+
+Profiles select the checks used by `plan --profile NAME`. Both `macos` and
+`macos-desktop` omit SSH and APT checks. All built-in profiles ship in the Python
+package, without depending on external configuration files.

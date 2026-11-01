@@ -1,1 +1,0 @@
-{"name":"macos-desktop","description":"macOS workstation baseline","checks":["platform","firewall","listening_ports","privacy"]}

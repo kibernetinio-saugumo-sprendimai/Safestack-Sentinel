@@ -9,4 +9,11 @@ __pycache__/
 .idea/
 .DS_Store
 
-!sentinel/profiles/*.json
+# Local credentials and sensitive audit artifacts
+.env
+.env.*
+*.pem
+*.key
+*.sig
+*.pdf
+*.jsonl

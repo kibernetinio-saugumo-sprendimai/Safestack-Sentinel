@@ -69,7 +69,7 @@ def main(argv=None) -> int:
             append_history(report, args.history)
         if args.telegram:
             print("Telegram notification sent" if telegram(report) else "Telegram notification skipped (credentials missing)")
-        print(json.dumps(report, indent=2) if not args.json else f"Score: {report['score']} (report written to {args.json})")
+        print(json.dumps(report, indent=2) if not args.json else f"Assessment: {report['assessment']}; score: {report['score']} (report written to {args.json})")
         return 0
     if args.command == "plan":
         try:
@@ -77,7 +77,7 @@ def main(argv=None) -> int:
         except ValueError as exc:
             parser.error(str(exc))
         report = build(run_all(profile["checks"]))
-        atomic_write(args.json, (json.dumps(plan(report), indent=2) + "\n").encode("utf-8"))
+        atomic_write(args.json, (json.dumps(plan(report, profile), indent=2) + "\n").encode("utf-8"))
         print(f"Read-only plan written to {args.json}")
         return 0
     if args.command == "fix":
@@ -96,7 +96,11 @@ def main(argv=None) -> int:
         serve(args.directory, port=args.port)
         return 0
     if args.command == "keygen":
-        generate_key(args.private_key, args.public_key)
+        try:
+            generate_key(args.private_key, args.public_key)
+        except (OSError, ValueError) as exc:
+            print(f"Key generation failed: {exc}", file=sys.stderr)
+            return 2
         return 0
     if args.command == "sign":
         sign_report(args.report, args.signature, args.private_key)
@@ -104,10 +108,18 @@ def main(argv=None) -> int:
     if args.command == "verify-signature":
         return 0 if verify_signature(args.report, args.signature, args.public_key) else 2
     if args.action == "create":
-        create(args.paths, args.output)
+        try:
+            create(args.paths, args.output)
+        except (OSError, ValueError) as exc:
+            print(f"Baseline creation failed: {exc}", file=sys.stderr)
+            return 2
         print(f"Baseline written to {args.output}")
         return 0
-    results = verify(args.baseline)
+    try:
+        results = verify(args.baseline)
+    except (OSError, ValueError) as exc:
+        print(f"Baseline verification failed: {exc}", file=sys.stderr)
+        return 2
     for path, ok in results:
         print(("OK   " if ok else "FAIL ") + path)
     return 0 if all(ok for _, ok in results) else 2

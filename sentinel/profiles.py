@@ -1,19 +1,21 @@
-import json
-import re
-from pathlib import Path
+"""Built-in host labels, available in source checkouts and installed packages."""
+from copy import deepcopy
 
-ROOT = Path(__file__).resolve().parent
+PROFILES = {
+    "default": {"name": "default", "role": "general-purpose host"},
+    "kali-vm": {"name": "kali-vm", "role": "Kali Linux virtual machine"},
+    "ubuntu-server": {"name": "ubuntu-server", "role": "Ubuntu server"},
+    "raspberry-pi-vpn": {"name": "raspberry-pi-vpn", "role": "Raspberry Pi VPN host"},
+    "macos-desktop": {"name": "macos-desktop", "role": "macOS workstation"},
+    "macos": {"name": "macos", "role": "macOS workstation"},
+}
 
 
 def load(name: str) -> dict:
-    if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", name):
-        raise ValueError(f"Invalid profile name: {name}")
-    path = ROOT / "profiles" / f"{name}.json"
-    if not path.is_file():
+    if name not in PROFILES:
         raise ValueError(f"Unknown profile: {name}")
-    profile = json.loads(path.read_text(encoding="utf-8"))
     from .checks import CHECKS
-    names = profile.get("checks")
-    if not isinstance(names, list) or not all(isinstance(n, str) and n in CHECKS for n in names):
-        raise ValueError(f"Invalid checks in profile: {name}")
+    profile = deepcopy(PROFILES[name])
+    profile["checks"] = [check for check in CHECKS
+                         if name not in ("macos", "macos-desktop") or check not in ("ssh", "updates")]
     return profile

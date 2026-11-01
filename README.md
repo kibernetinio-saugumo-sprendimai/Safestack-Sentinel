@@ -26,7 +26,7 @@ python -m sentinel sign report.json report.sig sentinel-private.pem
 python -m sentinel verify-signature report.json report.sig sentinel-public.pem
 ```
 
-The CLI requires the `cryptography` package for Ed25519 signatures. See [`docs/USAGE.md`](docs/USAGE.md)
+The CLI requires cryptography for Ed25519 signing. See [`docs/USAGE.md`](docs/USAGE.md)
 for all commands and [`docs/SECURITY.md`](docs/SECURITY.md) for the trust model.
 
 Deployment helpers and extensions are documented in

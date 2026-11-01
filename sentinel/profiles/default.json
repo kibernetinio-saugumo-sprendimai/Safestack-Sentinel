@@ -1,1 +1,0 @@
-{"name":"default","description":"Portable checks for any supported host","checks":["platform","firewall","listening_ports","ssh","updates","privacy"]}

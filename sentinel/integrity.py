@@ -1,5 +1,6 @@
 import hashlib
 import json
+import re
 import stat
 from pathlib import Path
 from .safeio import atomic_write
@@ -30,19 +31,48 @@ def digest(path: str, max_bytes: int = MAX_DIGEST_BYTES) -> str:
 
 
 def create(paths, output: str) -> None:
+    paths = list(paths)
+    destination = Path(output).expanduser().resolve()
+    for path in paths:
+        source = Path(path)
+        if source.resolve() == destination or (destination.exists() and source.samefile(destination)):
+            raise ValueError("baseline output must not be one of the tracked files")
     data = {str(Path(p)): digest(p) for p in paths}
+    _validate(data)
     atomic_write(output, (json.dumps(data, indent=2) + "\n").encode(), 0o600)
+
+
+def _unique_object(pairs):
+    data = {}
+    for path, expected in pairs:
+        if path in data:
+            raise ValueError(f"duplicate baseline path: {path}")
+        data[path] = expected
+    return data
+
+
+def _validate(data):
+    if not isinstance(data, dict) or not data:
+        raise ValueError("baseline must be a non-empty JSON object")
+    if len(data) > MAX_BASELINE_ENTRIES:
+        raise ValueError(f"baseline contains more than {MAX_BASELINE_ENTRIES} entries")
+    for path, expected in data.items():
+        if not isinstance(path, str) or not path or "\x00" in path:
+            raise ValueError("baseline paths must be non-empty strings without NUL bytes")
+        if not isinstance(expected, str) or not re.fullmatch(r"[0-9a-f]{64}", expected):
+            raise ValueError("baseline digests must be 64 lowercase hexadecimal characters")
 
 
 def verify(baseline: str):
     baseline_path = Path(baseline)
     _regular_file(baseline_path, MAX_BASELINE_BYTES)
-    data = json.loads(baseline_path.read_text(encoding="utf-8"))
-    if not isinstance(data, dict):
-        raise ValueError("baseline must be a JSON object")
-    if len(data) > MAX_BASELINE_ENTRIES:
-        raise ValueError(f"baseline contains more than {MAX_BASELINE_ENTRIES} entries")
+    data = json.loads(baseline_path.read_text(encoding="utf-8"), object_pairs_hook=_unique_object)
+    _validate(data)
+    results = []
     for path, expected in data.items():
-        if not isinstance(path, str) or not isinstance(expected, str):
-            raise ValueError("baseline keys and digests must be strings")
-    return [(path, digest(path) == expected) for path, expected in data.items()]
+        try:
+            ok = digest(path) == expected
+        except OSError:
+            ok = False
+        results.append((path, ok))
+    return results
