@@ -1,7 +1,6 @@
 # Development
 
-The project targets Python 3.9 or newer and has no runtime dependency outside
-the standard library.
+The project targets Python 3.9 or newer and requires `cryptography` for Ed25519 signatures.
 
 Run the checks before committing:
 

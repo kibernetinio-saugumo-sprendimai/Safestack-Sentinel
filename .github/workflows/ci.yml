@@ -8,6 +8,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - run: python -m pip install -e .
       - run: python -m unittest discover -v
       - run: python -m compileall -q sentinel tests
       - run: python -m sentinel audit --json /tmp/sentinel-ci.json

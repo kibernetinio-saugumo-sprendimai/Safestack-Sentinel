@@ -57,3 +57,9 @@ file was trustworthy.
 - `0`: command completed successfully;
 - `2`: baseline verification found a mismatch;
 - other non-zero codes: invalid arguments or an operational error.
+
+Profiles select the checks used by `plan --profile NAME`; built-in profiles ship
+inside the Python package. SSH inspection uses `sshd -T`. Secure default values
+remain `review` until connection-specific `Match` rules have been checked with
+`sshd -T -C` for the relevant users and connections. Missing tools, permission
+errors, and unrecognized socket output produce `unknown`.

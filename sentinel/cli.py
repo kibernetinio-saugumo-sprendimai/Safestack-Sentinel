@@ -72,8 +72,11 @@ def main(argv=None) -> int:
         print(json.dumps(report, indent=2) if not args.json else f"Score: {report['score']} (report written to {args.json})")
         return 0
     if args.command == "plan":
-        load_profile(args.profile)
-        report = build(run_all())
+        try:
+            profile = load_profile(args.profile)
+        except ValueError as exc:
+            parser.error(str(exc))
+        report = build(run_all(profile["checks"]))
         atomic_write(args.json, (json.dumps(plan(report), indent=2) + "\n").encode("utf-8"))
         print(f"Read-only plan written to {args.json}")
         return 0

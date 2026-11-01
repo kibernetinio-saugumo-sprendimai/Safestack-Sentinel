@@ -10,6 +10,7 @@ SSH, packages, services, or user files.
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
+python -m pip install -e .
 python -m sentinel audit --json report.json --html report.html
 python -m unittest discover -v
 ```
@@ -25,7 +26,7 @@ python -m sentinel sign report.json report.sig sentinel-private.pem
 python -m sentinel verify-signature report.json report.sig sentinel-public.pem
 ```
 
-The MVP uses only the Python standard library. See [`docs/USAGE.md`](docs/USAGE.md)
+The CLI requires the `cryptography` package for Ed25519 signatures. See [`docs/USAGE.md`](docs/USAGE.md)
 for all commands and [`docs/SECURITY.md`](docs/SECURITY.md) for the trust model.
 
 Deployment helpers and extensions are documented in

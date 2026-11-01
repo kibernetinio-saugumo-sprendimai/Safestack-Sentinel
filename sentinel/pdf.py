@@ -13,7 +13,7 @@ def write_pdf(report: dict, path: str) -> None:
                "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>", f"<< /Length {len(stream.encode())} >>\nstream\n{stream}\nendstream"]
     out = "%PDF-1.4\n%\xe2\xe3\xcf\xd3\n"; offsets = [0]
     for i, obj in enumerate(objects, 1):
-        offsets.append(len(out.encode())); out += f"{i} 0 obj\n{obj}\nendobj\n"
-    xref = len(out.encode()); out += f"xref\n0 {len(objects)+1}\n0000000000 65535 f \n" + "".join(f"{n:010d} 00000 n \n" for n in offsets[1:])
+        offsets.append(len(out.encode("latin-1"))); out += f"{i} 0 obj\n{obj}\nendobj\n"
+    xref = len(out.encode("latin-1")); out += f"xref\n0 {len(objects)+1}\n0000000000 65535 f \n" + "".join(f"{n:010d} 00000 n \n" for n in offsets[1:])
     out += f"trailer\n<< /Size {len(objects)+1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n"
     atomic_write(path, out.encode("latin-1"), 0o600)

@@ -1,0 +1,1 @@
+{"name":"kali-vm","description":"Kali VM baseline","checks":["platform","firewall","listening_ports","ssh","updates","privacy"]}
